@@ -11,8 +11,11 @@ builder.Services.AddSwaggerGen();
 
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("Secrets.json");
 
-var mongoClient = new MongoClient(builder.Configuration.GetConnectionString("CommBank"));
-var mongoDatabase = mongoClient.GetDatabase("CommBank");
+var connectionString = builder.Configuration.GetConnectionString("CommBankDb");
+Console.WriteLine($"MongoDB connection string: {connectionString?.Replace("karanisbest999", "****")}");
+var mongoClientSettings = MongoClientSettings.FromConnectionString(connectionString); mongoClientSettings.SslSettings = new SslSettings { EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 }; var mongoClient = new MongoClient(mongoClientSettings);
+var mongoDatabase = mongoClient.GetDatabase(
+    builder.Configuration.GetSection("MongoSettings")["DatabaseName"]);
 
 IAccountsService accountsService = new AccountsService(mongoDatabase);
 IAuthService authService = new AuthService(mongoDatabase);
@@ -43,7 +46,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
